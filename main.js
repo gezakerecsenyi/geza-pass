@@ -11,7 +11,6 @@
 Geza Kerecsenyi 2018. Share under Creative Commons Attribution-NonCommercial 4.0 International License.
 */
 
-//Definitions of common streaks (patterns) of numbers, sorted by frequency and complexity (tier 1 is least complex)
 var tier1 = ["123","234","345","456","567","789","890","0987654321","1234","2345","3456","0987","4567","5678","6789","7890","246","2468","1234567890","321","432","543","654","765","987","098","12","10","11","22","33","44","55","66","77","88","99","00"];
 
 var tier2 = ["4321","5432","6543","7654","8765","9876","642","8642","210","54321","65432","76543","87654","98765","09876","654321","765432","7531","876543","08642","987654","963","098765","8765432","9876543210","9876543","0987654","87654321","09876543","531","852","012","0123","12345","23456","34567","45678","56789","67890","123456","234567","0246","0369","1357","345678","24680","456789","357","369","567890","2345678","0123456789","024","3456789","4567890","12345678","23456789","34567890","135","258","987654321","098765432"];
@@ -85,7 +84,7 @@ function score(p){
   //Get base score ('Best case scenario') to subract from - a weighted sum of all characters
   var score = p.split(/[a-z]/g).length*a + p.split(/[0-9]/g).length*b + p.split(/[A-Z]/g).length*c + (p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length)*d + (p.length - (p.split(/[a-z]/g).length + p.split(/[0-9]/g).length + p.split(/[A-Z]/g).length + p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length))*e;
 
-
+ 
   //Penalise common 'streaks' of numbers (e.g '123')
 
   //Find all streaks
@@ -175,9 +174,13 @@ function score(p){
     for (q=i+1;q<wordPos.length;q++){
       var found;
       if (olm === 0){
-        var found = wordPos[q].spans.every(r => wordPos[i].spans.indexOf(r) >= 0);
+        var found = wordPos[q].spans.every(function(r){
+          return wordPos[i].spans.indexOf(r) >= 0;
+        });
       } else {
-        var found = wordPos[i].spans.some(r => wordPos[q].spans.indexOf(r) >= 0);
+        var found = wordPos[i].spans.some(function(r){
+          return wordPos[q].spans.indexOf(r) >= 0;
+        });
       }
       if (found){
         if (wordPos[i].spans.length < wordPos[q].spans.length){
