@@ -9,5 +9,6 @@
 (_______)(_______/(_______/|/     \|       |/       |/     \|\_______)\_______)
 ```
 
-### A front-end JS function to score passwords based on their safety
+## A front-end JS function to score passwords based on their safety
 
+### Getting Started
