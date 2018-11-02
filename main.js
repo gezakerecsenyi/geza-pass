@@ -42,6 +42,25 @@ var credd = "\n"; //The delimiter between the passwords
 var tc = 10000; //Amount of passwords to penalise from 'cred'
 var wc = 1000; //Amount of 'awful' passwords to prohibit from 'cred'
 
+//Set thresholds and actions for password complexity levels
+var categories = [
+  {max:0, action:function(score){ //Use this format to create unlimited categories of password complexities
+    alert("Awful or commonly used");
+  }},
+  {max:4, action:function(score){
+    alert("1/4 - unacceptable");
+  }},
+  {max:7, action:function(score){
+    alert("2/4 - needs more special characters"); //This, for instance, would apply to any password with a score between 4 and 7
+  }},
+  {max:10.5, action:function(score){
+    alert("3/4 - good! The minimum complexion.");
+  }},
+  {max:Infinity, action:function(score){ //Use max:Infinity to do anything above the highest option.
+    alert("Great; of a very decent quality, complexion and length.");
+  }}
+];
+
 //======================================================================================================================================
 
 var oReq = new XMLHttpRequest();
@@ -63,7 +82,6 @@ reqPword.open("GET", cred, true);
 reqPword.send();
 
 function score(p){
-  console.time("Timing");
   //Get base score ('Best case scenario') to subract from - a weighted sum of all characters
   var score = p.split(/[a-z]/g).length*a + p.split(/[0-9]/g).length*b + p.split(/[A-Z]/g).length*c + (p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length)*d + (p.length - (p.split(/[a-z]/g).length + p.split(/[0-9]/g).length + p.split(/[A-Z]/g).length + p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length))*e;
 
@@ -175,7 +193,7 @@ function score(p){
 
   //Penalise
   for (i=0;i<wordPos.length;i++){
-    score -= Math.log10(wordPos[i].word.length)*(wordPos[i].word.length+1);
+    score -= Math.log(Math.log10(wordPos[i].word.length)*(wordPos[i].word.length))*2.5;
   }
 
   //Penalise common passwords
@@ -186,6 +204,17 @@ function score(p){
       score = 0;
     }
   }
-  console.timeEnd("Timing")
-  console.log(score);
+ 
+  categories.sort(function(a,b){
+    return a.max - b.max;
+  });
+ 
+  for (i=0;i<categories.length;i++){
+    if (score > categories[i].max){
+      continue;
+    } else {
+      categories[i].action(score);
+      break;
+    }
+  }
 }
