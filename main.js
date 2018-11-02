@@ -22,28 +22,49 @@ var tier4 = ["97531","543210","876543210","76543210","951","6543210","43210","86
 
 var words, text, wordPos, pwords;
 
+//---------------------------------------------------------------SETUP------------------------------------------------------------------
+
+//Weightings
+var a = 1; //Lowercase letters
+var b = 1.4; //Numbers
+var c = 1.3; //Uppercase letters
+var d = 1.9; //Special characters
+var e = 1.7; //Other characters
+
+//List of words setup
+var di = "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt"; //Your choice of list of words
+var did = "\n"; //The delimiter between the words
+
+//Common passwords setup
+var cred = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt" //Your list of common passwords
+var credd = "\n"; //The delimiter between the passwords
+var tc = 10000; //Amount of passwords to penalise from 'cred'
+var wc = 1000; //Amount of 'awful' passwords to prohibit from 'cred'
+
+//======================================================================================================================================
+
 var oReq = new XMLHttpRequest();
 oReq.onreadystatechange = function(){
   if(this.readyState === 4 && this.status === 200){
-    words = this.responseText.split("\n");
+    words = this.responseText.split(did);
   }
 };
-oReq.open("GET", "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt", true);
+oReq.open("GET", di, true);
 oReq.send();
 
 var reqPword = new XMLHttpRequest();
 reqPword.onreadystatechange = function(){
   if(this.readyState === 4 && this.status === 200){
-    pwords = this.responseText.split("\n");
+    pwords = this.responseText.split(credd);
   }
 };
-reqPword.open("GET", "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt", true);
+reqPword.open("GET", cred, true);
 reqPword.send();
 
 function score(p){
   console.time("Timing");
   //Get base score ('Best case scenario') to subract from - a weighted sum of all characters
-  var score = p.split(/[a-z]/g).length + p.split(/[0-9]/g).length*1.4 + p.split(/[A-Z]/g).length*1.3 + (p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length)*1.9 + (p.length - (p.split(/[a-z]/g).length + p.split(/[0-9]/g).length + p.split(/[A-Z]/g).length + p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length))*1.7;
+  var score = p.split(/[a-z]/g).length*a + p.split(/[0-9]/g).length*b + p.split(/[A-Z]/g).length*c + (p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length)*d + (p.length - (p.split(/[a-z]/g).length + p.split(/[0-9]/g).length + p.split(/[A-Z]/g).length + p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length))*e;
 
 
   //Penalise common 'streaks' of numbers (e.g '123')
@@ -148,8 +169,8 @@ function score(p){
 
   //Penalise common passwords
   if (pwords.indexOf(p)>-1){
-    if (pwords.indexOf(p)>1000){
-      score -= Math.log2(10002-pwords.indexOf(p))/2.5;
+    if (pwords.indexOf(p)>wc){
+      score -= Math.log2((tc+2)-pwords.indexOf(p))/2.5;
     } else {
       score = 0;
     }
