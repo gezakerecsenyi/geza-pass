@@ -34,6 +34,7 @@ var e = 1.7; //Other characters
 //List of words setup
 var di = "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt"; //Your choice of list of words
 var did = "\n"; //The delimiter between the words
+var olm = 1; //The mode to control the overlap. 0 is more punitive, while 1 is less strict. e.g if we had a password 'hellorry21', that contains words 'hell', 'hello' and 'lorry'. 'Hell' is ignored, since it is just part of a bigger word (deactivate this in 'features' if you wish). With mode 0, we subtract from the score for both 'hello' and 'lorry'. With mode 1, we only subtract for 'hello'.
 
 //Common passwords setup
 var cred = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt" //Your list of common passwords
@@ -154,10 +155,20 @@ function score(p){
   //Ensure overlapping words don't get doubley penalised (e.g 'welcome' contains also contains 'come', but we only want to penalise 'welcome'.)
   for (i=0;i<wordPos.length;i++){
     for (q=i+1;q<wordPos.length;q++){
-      var found = wordPos[i].spans.some(r => wordPos[q].spans.indexOf(r) >= 0);
+      var found;
+      if (olm === 0){
+        var found = wordPos[q].spans.every(r => wordPos[i].spans.indexOf(r) >= 0);
+      } else {
+        var found = wordPos[i].spans.some(r => wordPos[q].spans.indexOf(r) >= 0);
+      }
       if (found){
-        wordPos.splice(q,1);
-        q--;
+        if (wordPos[i].spans.length < wordPos[q].spans.length){
+          wordPos.splice(i,1);
+          i--;
+        } else {
+          wordPos.splice(q,1);
+          q--;
+        }
       }
     }
   }
