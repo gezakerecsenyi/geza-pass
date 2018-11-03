@@ -1,4 +1,4 @@
- /*
+/*
  _______  _______  _______  _______         _______  _______  _______  _______ 
 (  ____ \(  ____ \/ ___   )(  ___  )       (  ____ )(  ___  )(  ____ \(  ____ \
 | (    \/| (    \/\/   )  || (   ) |       | (    )|| (   ) || (    \/| (    \/
@@ -7,7 +7,6 @@
 | | \_  )| (        /   /  | (   ) |       | (      | (   ) |      ) |      ) |
 | (___) || (____/\ /   (_/\| )   ( |       | )      | )   ( |/\____) |/\____) |
 (_______)(_______/(_______/|/     \|       |/       |/     \|\_______)\_______)
-
 Geza Kerecsenyi 2018. Share under Creative Commons Attribution-NonCommercial 4.0 International License.
 */
 
@@ -21,14 +20,15 @@ var tier4 = ["97531","543210","876543210","76543210","951","6543210","43210","86
 
 var words, text, wordPos, pwords;
 
+const order = [/[a-~]/g, /[0-9]/g, /[A-Z]/g, /[ -/\:-@]/g, /[^a-~0-9A-Z -/\:-@]*/g];
+
 //---------------------------------------------------------------SETUP------------------------------------------------------------------
 
 //Weightings
-var a = 1; //Lowercase letters
-var b = 1.4; //Numbers
-var c = 1.3; //Uppercase letters
-var d = 1.9; //Special characters
-var e = 1.7; //Other characters
+var wi = [1, 1.4, 1.3, 1.9, 1.7] //Lowercase, numbers, uppercase, special, other
+
+//Minimum requirements
+var mr = [5, 1, 2, 1, 0]; //Lowercase, numbers, uppercase, special, other
 
 //List of words setup
 var di = "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt"; //Your choice of list of words
@@ -66,6 +66,9 @@ var oReq = new XMLHttpRequest();
 oReq.onreadystatechange = function(){
   if(this.readyState === 4 && this.status === 200){
     words = this.responseText.split(did);
+    categories.sort(function(a,b){
+      return a.max - b.max;
+    });
   }
 };
 oReq.open("GET", di, true);
@@ -82,8 +85,11 @@ reqPword.send();
 
 function score(p){
   //Get base score ('Best case scenario') to subract from - a weighted sum of all characters
-  var score = p.split(/[a-z]/g).length*a + p.split(/[0-9]/g).length*b + p.split(/[A-Z]/g).length*c + (p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length)*d + (p.length - (p.split(/[a-z]/g).length + p.split(/[0-9]/g).length + p.split(/[A-Z]/g).length + p.split(/[ -/]/g).length + p.split(/[\:-@]/g).length))*e;
+  var score = 0;
 
+  for (i=0;i<order.length;i++){
+    score+=p.split(order[i]).length*wi[i];
+  }
  
   //Penalise common 'streaks' of numbers (e.g '123')
 
@@ -207,10 +213,12 @@ function score(p){
       score = 0;
     }
   }
- 
-  categories.sort(function(a,b){
-    return a.max - b.max;
-  });
+
+  if (!(mr.every(function(v,i){
+    return p.split(order[i]).length-1 >= v;
+  }))){
+    score = 0;
+  }
  
   for (i=0;i<categories.length;i++){
     if (score > categories[i].max){
